@@ -17,7 +17,7 @@ export class StripeProvider implements PaymentProvider {
   constructor(private readonly config: AppConfigService) {
     const key = this.config.stripeSecretKey;
     if (key) {
-      this.stripe = new Stripe(key, { apiVersion: '2024-09-30.acacia' });
+      this.stripe = new Stripe(key);
     }
   }
 

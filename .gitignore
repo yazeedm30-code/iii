@@ -81,3 +81,6 @@ secrets/
 .history/
 tmp/
 temp/
+
+# Compiled jest configs
+apps/*/test/*.js

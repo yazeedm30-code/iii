@@ -25,14 +25,14 @@ export class SocialAuthService {
     // verifications wired to your client/service identifiers.
 
     const claims = this.decodeUnverified(identityToken);
-    const providerUserId = claims.sub ?? claims.user_id;
-    if (!providerUserId) {
+    const sub = claims.sub ?? claims.user_id;
+    if (typeof sub !== 'string' || sub.length === 0) {
       throw new BadRequestException({ code: 'IDENTITY_TOKEN_MISSING_SUB' });
     }
 
     return {
       provider: provider === 'APPLE' ? AuthProvider.APPLE : AuthProvider.GOOGLE,
-      providerUserId,
+      providerUserId: sub,
       email: typeof claims.email === 'string' ? claims.email : undefined,
       fullName:
         typeof claims.name === 'string'
