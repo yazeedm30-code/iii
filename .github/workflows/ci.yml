@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  api:
+    name: Backend (NestJS)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: drivethru
+          POSTGRES_PASSWORD: drivethru
+          POSTGRES_DB: drivethru_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U drivethru -d drivethru_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://drivethru:drivethru@localhost:5432/drivethru_test?schema=public
+      REDIS_URL: redis://localhost:6379
+      JWT_ACCESS_SECRET: test-access-secret-test-access-secret
+      JWT_REFRESH_SECRET: test-refresh-secret-test-refresh-secret
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @platform/api prisma:generate
+      - run: pnpm --filter @platform/api prisma:deploy
+      - run: pnpm --filter @platform/api lint
+      - run: pnpm --filter @platform/api test
+      - run: pnpm --filter @platform/api build
+
+  web:
+    name: Web dashboards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @platform/admin type-check
+      - run: pnpm --filter @platform/kds type-check
+      - run: pnpm --filter @platform/merchant type-check
+      - run: pnpm --filter @platform/branch-display type-check
+
+  flutter:
+    name: Customer app (Flutter)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/customer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.24.0', channel: stable }
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-warnings
+      - run: flutter test --no-pub
