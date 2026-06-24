@@ -1,18 +1,22 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../storage/auth_storage.dart';
 
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this.storage);
+  AuthInterceptor(this._storage);
 
-  final FlutterSecureStorage storage;
-  static const String accessTokenKey = 'access_token';
+  final AuthStorage _storage;
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await storage.read(key: accessTokenKey);
+    if (options.extra['skipAuth'] == true) {
+      handler.next(options);
+      return;
+    }
+    final token = await _storage.readAccessToken();
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }

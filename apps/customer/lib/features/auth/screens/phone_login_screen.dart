@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class PhoneLoginScreen extends StatefulWidget {
+import '../../../core/network/api_response.dart';
+import '../providers/auth_providers.dart';
+
+class PhoneLoginScreen extends ConsumerStatefulWidget {
   const PhoneLoginScreen({super.key});
 
   @override
-  State<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
+  ConsumerState<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
 }
 
-class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
+class _PhoneLoginScreenState extends ConsumerState<PhoneLoginScreen> {
   final TextEditingController _controller = TextEditingController(text: '+9665');
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -18,9 +23,20 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (_formKey.currentState?.validate() != true) return;
-    context.push('/auth/otp?phone=${Uri.encodeComponent(_controller.text.trim())}');
+    setState(() => _submitting = true);
+    final phone = _controller.text.trim();
+    try {
+      await ref.read(authControllerProvider.notifier).requestOtp(phone);
+      if (!mounted) return;
+      context.push('/auth/otp?phone=${Uri.encodeComponent(phone)}');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -35,10 +51,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const SizedBox(height: 48),
-                Text(
-                  'مرحباً بك',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+                Text('مرحباً بك', style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 Text(
                   'أدخل رقم جوالك للمتابعة',
@@ -49,18 +62,29 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   controller: _controller,
                   keyboardType: TextInputType.phone,
                   textDirection: TextDirection.ltr,
+                  enabled: !_submitting,
                   decoration: const InputDecoration(
                     labelText: 'رقم الجوال',
                     prefixIcon: Icon(Icons.phone_iphone),
                   ),
                   validator: (value) {
                     final v = value?.trim() ?? '';
-                    if (v.length < 9) return 'رقم غير صالح';
+                    if (v.length < 10) return 'رقم غير صالح';
+                    if (!v.startsWith('+')) return 'يبدأ الرقم بـ + ورمز الدولة';
                     return null;
                   },
                 ),
                 const Spacer(),
-                FilledButton(onPressed: _submit, child: const Text('إرسال رمز التحقق')),
+                FilledButton(
+                  onPressed: _submitting ? null : _submit,
+                  child: _submitting
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('إرسال رمز التحقق'),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: <Widget>[
