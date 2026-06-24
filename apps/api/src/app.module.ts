@@ -21,6 +21,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ReportsModule } from './modules/reports/reports.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { MerchantModule } from './modules/merchant/merchant.module';
 import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
@@ -60,6 +61,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     ReportsModule,
     EmployeesModule,
     AdminModule,
+    MerchantModule,
     RealtimeModule,
   ],
   providers: [

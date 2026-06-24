@@ -1,4 +1,13 @@
-import { PrismaClient, BranchStatus, CouponType } from '@prisma/client';
+import {
+  PrismaClient,
+  BranchStatus,
+  CouponType,
+  UserKind,
+  AccountStatus,
+  AuthProvider,
+  AdminRole,
+} from '@prisma/client';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -177,6 +186,65 @@ async function main(): Promise<void> {
       perCustomerLimit: 1,
     },
   });
+
+  // ---------------------------------------------------------------------------
+  // Platform admin user (email/password)
+  // ---------------------------------------------------------------------------
+  const adminEmail = 'admin@drivethru.local';
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD ?? 'ChangeMe!2026';
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail },
+    include: { adminProfile: true, identities: true },
+  });
+  if (!existingAdmin) {
+    const passwordHash = await argon2.hash(adminPassword, { type: argon2.argon2id });
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        emailVerifiedAt: new Date(),
+        kind: UserKind.ADMIN,
+        status: AccountStatus.ACTIVE,
+        adminProfile: {
+          create: { role: AdminRole.SUPER_ADMIN, fullName: 'Platform Admin' },
+        },
+        identities: {
+          create: {
+            provider: AuthProvider.EMAIL_PASSWORD,
+            providerUserId: adminEmail,
+            passwordHash,
+          },
+        },
+      },
+    });
+    console.log(`Admin user created: ${adminEmail} / ${adminPassword}`);
+  }
+
+  // Link the seed merchant to an owner login (idempotent)
+  const merchantOwnerEmail = 'owner@demo-coffee.local';
+  const merchantOwnerPassword = process.env.MERCHANT_SEED_PASSWORD ?? 'ChangeMe!2026';
+  const existingOwner = await prisma.user.findUnique({ where: { email: merchantOwnerEmail } });
+  if (!existingOwner) {
+    const passwordHash = await argon2.hash(merchantOwnerPassword, { type: argon2.argon2id });
+    await prisma.user.create({
+      data: {
+        email: merchantOwnerEmail,
+        emailVerifiedAt: new Date(),
+        kind: UserKind.MERCHANT,
+        status: AccountStatus.ACTIVE,
+        merchantProfile: {
+          create: { merchantId: merchant.id, position: 'Owner' },
+        },
+        identities: {
+          create: {
+            provider: AuthProvider.EMAIL_PASSWORD,
+            providerUserId: merchantOwnerEmail,
+            passwordHash,
+          },
+        },
+      },
+    });
+    console.log(`Merchant owner created: ${merchantOwnerEmail} / ${merchantOwnerPassword}`);
+  }
 
   console.log('Seed completed.');
 }

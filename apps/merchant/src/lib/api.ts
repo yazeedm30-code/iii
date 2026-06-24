@@ -13,16 +13,9 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => {
-    const body = response.data;
-    if (body && typeof body === 'object' && body.success === false) {
-      return Promise.reject(new Error(body.error?.message ?? 'Request failed'));
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
-    const status = error?.response?.status;
-    if (status === 401) {
+    if (error?.response?.status === 401) {
       useAuth.getState().clear();
       if (typeof window !== 'undefined') window.location.href = '/login';
     }

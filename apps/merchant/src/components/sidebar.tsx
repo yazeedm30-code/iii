@@ -4,32 +4,34 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3,
+  Building2,
   LayoutDashboard,
+  ListTree,
   LogOut,
+  Package,
   ShoppingBag,
-  Store,
-  Tag,
-  Users,
 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth';
 
 const NAV = [
   { href: '/dashboard', label: 'نظرة عامة', icon: LayoutDashboard },
-  { href: '/dashboard/merchants', label: 'التجار', icon: Store },
   { href: '/dashboard/orders', label: 'الطلبات', icon: ShoppingBag },
-  { href: '/dashboard/coupons', label: 'العروض والكوبونات', icon: Tag },
-  { href: '/dashboard/customers', label: 'العملاء', icon: Users },
+  { href: '/dashboard/branches', label: 'الفروع', icon: Building2 },
+  { href: '/dashboard/categories', label: 'التصنيفات', icon: ListTree },
+  { href: '/dashboard/products', label: 'المنتجات', icon: Package },
   { href: '/dashboard/reports', label: 'التقارير', icon: BarChart3 },
 ];
 
-export function Sidebar() {
+export function Sidebar({ merchantName }: { merchantName?: string }) {
   const pathname = usePathname();
   const clear = useAuth((s) => s.clear);
+
   return (
-    <aside className="w-64 bg-brand text-white p-6 hidden md:flex flex-col">
-      <Link href="/dashboard" className="text-lg font-semibold mb-8">
-        لوحة التحكم
+    <aside className="w-64 bg-slate-900 text-white p-6 hidden md:flex flex-col">
+      <Link href="/dashboard" className="mb-8">
+        <div className="text-xs text-slate-400 mb-1">لوحة التاجر</div>
+        <div className="text-lg font-semibold">{merchantName ?? '...'}</div>
       </Link>
       <nav className="flex-1 space-y-1">
         {NAV.map((item) => {
@@ -59,7 +61,6 @@ export function Sidebar() {
         <LogOut size={18} />
         <span>تسجيل خروج</span>
       </button>
-      <p className="text-xs text-white/40 mt-4">v0.1.0</p>
     </aside>
   );
 }

@@ -5,6 +5,7 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import {
   CompleteRegistrationDto,
+  EmailPasswordLoginDto,
   LogoutDto,
   RefreshDto,
   RequestOtpDto,
@@ -41,6 +42,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign in with Apple or Google' })
   social(@Body() dto: SocialAuthDto, @Req() req: Request) {
     return this.authService.socialSignIn(dto, this.extractMeta(req));
+  }
+
+  @Public()
+  @Post('email/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Sign in with email and password (staff accounts)' })
+  emailLogin(@Body() dto: EmailPasswordLoginDto, @Req() req: Request) {
+    return this.authService.loginWithPassword(dto, this.extractMeta(req));
   }
 
   @Public()

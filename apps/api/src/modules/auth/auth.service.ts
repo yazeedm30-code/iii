@@ -1,12 +1,19 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, UserKind, AccountStatus, Locale } from '@prisma/client';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Prisma, UserKind, AccountStatus, Locale, AuthProvider } from '@prisma/client';
 
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { OtpService } from './services/otp.service';
 import { TokenService, IssuedTokens } from './services/token.service';
 import { SocialAuthService } from './services/social-auth.service';
+import { PasswordService } from './services/password.service';
 import {
   CompleteRegistrationDto,
+  EmailPasswordLoginDto,
   RequestOtpDto,
   SocialAuthDto,
   VerifyOtpDto,
@@ -30,7 +37,31 @@ export class AuthService {
     private readonly otp: OtpService,
     private readonly tokens: TokenService,
     private readonly social: SocialAuthService,
+    private readonly passwords: PasswordService,
   ) {}
+
+  async loginWithPassword(dto: EmailPasswordLoginDto, meta: RequestMeta): Promise<AuthResult> {
+    const identity = await this.prisma.authIdentity.findFirst({
+      where: { provider: AuthProvider.EMAIL_PASSWORD, providerUserId: dto.email.toLowerCase() },
+      include: { user: { include: { customer: true, merchantProfile: true, adminProfile: true } } },
+    });
+    if (!identity || !identity.passwordHash) {
+      throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' });
+    }
+    const ok = await this.passwords.verify(identity.passwordHash, dto.password);
+    if (!ok) {
+      throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS' });
+    }
+    if (identity.user.status === AccountStatus.SUSPENDED || identity.user.status === AccountStatus.DELETED) {
+      throw new UnauthorizedException({ code: 'ACCOUNT_INACTIVE' });
+    }
+    return this.issueAuthResult(
+      identity.user as Prisma.UserGetPayload<{ include: { customer: true } }>,
+      dto.deviceId,
+      'WEB',
+      meta,
+    );
+  }
 
   async requestOtp(dto: RequestOtpDto): Promise<{ ttlSeconds: number }> {
     return this.otp.request(dto.phoneE164);
@@ -178,6 +209,9 @@ export class AuthService {
       ipAddress: meta.ipAddress,
     });
 
+    const profileComplete =
+      user.kind === UserKind.CUSTOMER ? Boolean(user.customer) : true;
+
     return {
       ...tokens,
       user: {
@@ -185,7 +219,7 @@ export class AuthService {
         kind: user.kind,
         status: user.status,
         locale: user.preferredLocale,
-        profileComplete: Boolean(user.customer),
+        profileComplete,
       },
     };
   }

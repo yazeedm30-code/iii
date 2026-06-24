@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -7,6 +8,7 @@ import {
   IsString,
   Length,
   Matches,
+  MinLength,
 } from 'class-validator';
 import { Locale } from '@prisma/client';
 
@@ -89,4 +91,20 @@ export class LogoutDto {
   @ApiProperty()
   @IsString()
   refreshToken!: string;
+}
+
+export class EmailPasswordLoginDto {
+  @ApiProperty({ example: 'admin@drivethru.local' })
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ example: 'ChangeMe!2026' })
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  deviceId?: string;
 }
