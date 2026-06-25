@@ -115,22 +115,27 @@ async function main(): Promise<void> {
     create: { branchId: branch.id, productId: latte.id, isAvailable: true },
   });
 
-  await prisma.modifierGroup.create({
-    data: {
-      productId: latte.id,
-      name: 'Size',
-      nameAr: 'الحجم',
-      minSelections: 1,
-      maxSelections: 1,
-      isRequired: true,
-      options: {
-        create: [
-          { name: 'Medium', nameAr: 'وسط', priceDelta: 0, isDefault: true },
-          { name: 'Large', nameAr: 'كبير', priceDelta: 4 },
-        ],
-      },
-    },
+  const existingSize = await prisma.modifierGroup.findFirst({
+    where: { productId: latte.id, name: 'Size' },
   });
+  if (!existingSize) {
+    await prisma.modifierGroup.create({
+      data: {
+        productId: latte.id,
+        name: 'Size',
+        nameAr: 'الحجم',
+        minSelections: 1,
+        maxSelections: 1,
+        isRequired: true,
+        options: {
+          create: [
+            { name: 'Medium', nameAr: 'وسط', priceDelta: 0, isDefault: true },
+            { name: 'Large', nameAr: 'كبير', priceDelta: 4 },
+          ],
+        },
+      },
+    });
+  }
 
   // ---------------------------------------------------------------------------
   // Loyalty program + tier + coupon
