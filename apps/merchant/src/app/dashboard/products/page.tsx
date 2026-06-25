@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { Package, Plus, X } from 'lucide-react';
 
 import { api } from '@/lib/api';
+import { ImageUploader } from '@/components/image-uploader';
 
 interface Category {
   id: string;
@@ -184,6 +185,15 @@ function CreateProductModal({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="md:col-span-2">
+            <ImageUploader
+              value={form.imageUrl}
+              onChange={(url) => update('imageUrl', url)}
+              endpoint="product-image"
+              label="صورة المنتج"
+              aspect="video"
+            />
+          </div>
           <label className="block md:col-span-2">
             <span className="block text-sm text-slate-600 mb-1">التصنيف *</span>
             <select
@@ -208,7 +218,6 @@ function CreateProductModal({
           <Field label="الوصف بالعربية" value={form.descriptionAr} onChange={(v) => update('descriptionAr', v)} />
           <Field label="السعرات الحرارية" value={form.calories} onChange={(v) => update('calories', v)} ltr />
           <Field label="مدة التحضير (ثانية)" value={form.prepSeconds} onChange={(v) => update('prepSeconds', v)} ltr />
-          <Field label="رابط الصورة" value={form.imageUrl} onChange={(v) => update('imageUrl', v)} ltr />
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}

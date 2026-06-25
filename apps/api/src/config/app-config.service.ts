@@ -97,6 +97,43 @@ export class AppConfigService {
     return this.config.get<string>('FIREBASE_PROJECT_ID');
   }
 
+  get storageDriver(): 'local' | 's3' {
+    const v = this.config.get<string>('STORAGE_DRIVER', 'local');
+    return v === 's3' ? 's3' : 'local';
+  }
+
+  get uploadsLocalDir(): string {
+    return this.config.get<string>('UPLOADS_LOCAL_DIR', '/var/lib/uploads');
+  }
+
+  get storageEndpoint(): string {
+    return this.config.get<string>('STORAGE_ENDPOINT', '');
+  }
+
+  get storageRegion(): string {
+    return this.config.get<string>('STORAGE_REGION', 'us-east-1');
+  }
+
+  get storageBucket(): string {
+    return this.config.get<string>('STORAGE_BUCKET', 'drivethru-assets');
+  }
+
+  get storageAccessKey(): string {
+    return this.config.get<string>('STORAGE_ACCESS_KEY', '');
+  }
+
+  get storageSecretKey(): string {
+    return this.config.get<string>('STORAGE_SECRET_KEY', '');
+  }
+
+  get storagePublicUrl(): string {
+    return this.config.get<string>('STORAGE_PUBLIC_URL', '');
+  }
+
+  get uploadsMaxBytes(): number {
+    return Number(this.config.get<string>('UPLOADS_MAX_BYTES', String(5 * 1024 * 1024)));
+  }
+
   private required(key: string): string {
     const value = this.config.get<string>(key);
     if (!value) {

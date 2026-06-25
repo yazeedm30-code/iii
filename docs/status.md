@@ -25,6 +25,7 @@
 | Merchant Dashboard - home shell | ✅ |
 | Docker + CI (GitHub Actions) | ✅ |
 | تقنية وحدوية للـ State Machine و Geo utils | ✅ |
+| رفع صور المنتجات والتصنيفات وشعار التاجر (Local FS dev / S3 prod) | ✅ |
 
 ## ما يحتاج عمل قبل الإطلاق التجاري
 

@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { ListTree, Plus, X } from 'lucide-react';
 
 import { api } from '@/lib/api';
+import { ImageUploader } from '@/components/image-uploader';
 
 interface Category {
   id: string;
@@ -102,7 +103,7 @@ function CreateCategoryModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [form, setForm] = useState({ name: '', nameAr: '', slug: '', sortOrder: '1' });
+  const [form, setForm] = useState({ name: '', nameAr: '', slug: '', sortOrder: '1', imageUrl: '' });
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -112,6 +113,7 @@ function CreateCategoryModal({
         nameAr: form.nameAr,
         slug: form.slug,
         sortOrder: Number(form.sortOrder),
+        imageUrl: form.imageUrl || undefined,
       });
       return data;
     },
@@ -177,6 +179,13 @@ function CreateCategoryModal({
             className="w-full bg-slate-50 rounded-xl px-4 py-2.5"
           />
         </label>
+        <ImageUploader
+          value={form.imageUrl}
+          onChange={(url) => setForm((p) => ({ ...p, imageUrl: url }))}
+          endpoint="category-image"
+          label="صورة التصنيف (اختياري)"
+          aspect="wide"
+        />
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <div className="flex gap-3">
           <button

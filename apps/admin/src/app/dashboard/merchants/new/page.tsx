@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Store } from 'lucide-react';
 
 import { api } from '@/lib/api';
+import { ImageUploader } from '@/components/image-uploader';
 
 interface OnboardResult {
   merchantId: string;
@@ -22,6 +23,7 @@ export default function OnboardMerchantPage() {
     vatNumber: '',
     crNumber: '',
     primaryColor: '#1F2937',
+    logoUrl: '',
     ownerName: '',
     ownerEmail: '',
     ownerPassword: '',
@@ -83,7 +85,7 @@ export default function OnboardMerchantPage() {
               setResult(null);
               setForm({
                 name: '', nameAr: '', slug: '', vatNumber: '', crNumber: '',
-                primaryColor: '#1F2937', ownerName: '', ownerEmail: '',
+                primaryColor: '#1F2937', logoUrl: '', ownerName: '', ownerEmail: '',
                 ownerPassword: '', ownerPosition: 'Owner',
               });
             }}
@@ -151,6 +153,15 @@ export default function OnboardMerchantPage() {
             onChange={(v) => update('vatNumber', v)}
             ltr
           />
+          <div className="md:col-span-2">
+            <ImageUploader
+              value={form.logoUrl}
+              onChange={(url) => update('logoUrl', url)}
+              endpoint="merchant-logo"
+              label="شعار العلامة التجارية"
+              aspect="square"
+            />
+          </div>
         </div>
       </section>
 

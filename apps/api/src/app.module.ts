@@ -22,6 +22,7 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { MerchantModule } from './modules/merchant/merchant.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { RealtimeModule } from './realtime/realtime.module';
 
 @Module({
@@ -62,6 +63,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     EmployeesModule,
     AdminModule,
     MerchantModule,
+    UploadsModule,
     RealtimeModule,
   ],
   providers: [
